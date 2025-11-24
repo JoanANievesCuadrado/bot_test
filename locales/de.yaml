@@ -242,6 +242,7 @@ help: |
   /buy <_Anzahl sats_> <_fiat Wert_> <_fiat code_> <_Zahlungsmethode_> \[_Zuschlag/Rabatt_] - Erstellt eine Bitcoin Kaufauftrag
   /takeorder <_order id_> - Ermöglicht Ihnen, eine Bestellung aus dem Chat mit dem Bot anzunehmen, ohne zu dem Kanal zu gehen, in dem sie veröffentlicht wurde
   /info - Zeigt zusätzliche Informationen über das Bot an
+  /stats - Zeigt grundlegende Benutzerinformationen an
   /showusername - Schaltet die Anzeige des Benutzernamens in jedem neu erstellten Auftrag aus. Der Standardwert ist *nein* (false)
   /showvolume - zeigt das Handelsvolumen an, wenn eine Auftrag erstellt wird, Standardwert ist *nein* (false)
   /setinvoice - Mit diesem Befehl kann der Käufer die Ligthning-Rechnung aktualisieren, mit welcher er die Sats empfangen will 
@@ -626,6 +627,14 @@ user_info: |
   Volume traded: ${volume_traded}
   Total rating: ${total_rating}
   Disputes: ${disputes}
+user_stats: |
+  *Benutzerinformationen:*
+  >Handelsvolumen: ${volume_traded}
+  >Gesamtbewertung: ${total_rating}
+  >Streitfälle: ${disputes}
+
+  *Bot\\-Informationen:*
+  >Bot\\-Gebühr: ${bot_fee}
 disclaimer: |
   *Mit der Nutzung des P2P-Trade-Bots erklären Sie sich mit den folgenden Bedingungen einverstanden:*
 

@@ -242,6 +242,7 @@ help: |
   /buy <_importo in satoshi_> <_importo in fiat_> <_Fiat code_> <_metodo di pagamento_> [premium/discount] - Crea un ordine di acquisto
   /takeorder <_order id_> - Permette di prendere un ordine dalla chat con il bot senza passare al canale dove è stato pubblicato
   /info - Mostra indo aggiuntive sul Bot
+  /stats - Mostra le informazioni di base dell'utente
   /showusername - Disattiva la visualizzazione del nome utente in ogni nuovo ordine creato. Il valore predefinito è settato su no (false)
   /showvolume - mostra il volume degli scambi quando ogni ordine viene creato; il valore predefinito è *no* (false)
   /setinvoice - Questo comando consente all'acquirente di aggiornare la invoice LN su cui ricevere i sats 
@@ -623,6 +624,14 @@ user_info: |
   Volume traded: ${volume_traded}
   Total rating: ${total_rating}
   Disputes: ${disputes}
+user_stats: |
+  *Informazioni sull'utente:*
+  >Volume scambiato: ${volume_traded}
+  >Valutazione totale: ${total_rating}
+  >Controversie: ${disputes}
+
+  *Informazioni sul bot:*
+  >Commissione bot: ${bot_fee}
 disclaimer: |
   *Utilizzando il bot per il commercio P2P, si accettano i seguenti termini e condizioni:*
 

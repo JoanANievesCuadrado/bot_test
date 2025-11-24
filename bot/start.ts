@@ -995,6 +995,14 @@ const initialize = (
     }
   });
 
+  bot.command('stats', userMiddleware, async (ctx: MainContext) => {
+    try {
+      await messages.showStatsMessage(ctx, ctx.user);
+    } catch (error) {
+      logger.error(error);
+    }
+  });
+
   bot.command('showusername', userMiddleware, async (ctx: MainContext) => {
     try {
       const [showString] = (await validateParams(ctx, 2, '_yes/no_'))!;

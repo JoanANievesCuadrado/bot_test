@@ -242,6 +242,7 @@ help: |
   /buy <_monto en sats_> <_monto en fiat_> <_código fiat_> <_método de pago_> [prima/descuento] - Crea una orden de compra
   /takeorder <_order id_> - Permite tomar una orden desde el chat con el bot sin ir al canal donde fue publicada
   /info - Muestra información sobre el bot
+  /stats - Muestra información básica del usuario
   /showusername - Permite mostrar u ocultar el username en cada nueva orden creada, el valor predeterminado es no (falso)
   /showvolume - Permite mostrar el volumen de comercio en cada nueva orden creada, el valor predeterminado es no (falso)
   /setinvoice - Le permite al comprador actualizar la factura lightning en la que recibirá sats
@@ -628,6 +629,14 @@ user_info: |
   Volume traded: ${volume_traded}
   Total rating: ${total_rating}
   Disputes: ${disputes}
+user_stats: |
+  *Información del usuario:*
+  >Volumen comerciado: ${volume_traded}
+  >Calificación total: ${total_rating}
+  >Disputas: ${disputes}
+
+  *Información del bot:*
+  >Comisión del bot: ${bot_fee}
 disclaimer: |
   *Al utilizar el bot de comercio P2P, aceptas los siguientes términos y condiciones:*
 

@@ -1441,6 +1441,41 @@ const showInfoMessage = async (
   }
 };
 
+const showStatsMessage = async (
+  ctx: MainContext,
+  user: UserDocument,
+) => {
+  try {
+    // user info
+    const volume_traded = sanitizeMD(user.volume_traded);
+    const total_rating = user.total_rating;
+    const disputes = user.disputes;
+    let ratingText = '';
+    if (total_rating) {
+      ratingText = getStars(total_rating, user.total_reviews);
+    }
+    ratingText = sanitizeMD(ratingText);
+    let bot_fee = (Number(process.env.MAX_FEE) * 100).toString() + '%';
+    bot_fee = sanitizeMD(bot_fee);
+    const user_stats = ctx.i18n.t('user_stats', {
+      volume_traded,
+      total_rating: ratingText,
+      disputes,
+      bot_fee
+    });
+
+    await ctx.telegram.sendMessage(
+      user.tg_id,
+      user_stats,
+      {
+        parse_mode: 'MarkdownV2',
+      },
+    );
+  } catch (error) {
+    logger.error(error);
+  }
+};
+
 const buyerReceivedSatsMessage = async (
   bot: HasTelegram,
   buyerUser: UserDocument,
@@ -2068,6 +2103,7 @@ export {
   successSetAddress,
   sellerPaidHoldMessage,
   showInfoMessage,
+  showStatsMessage,
   sendBuyerInfo2SellerMessage,
   updateUserSettingsMessage,
   expiredInvoiceOnPendingMessage,

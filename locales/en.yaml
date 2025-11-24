@@ -246,6 +246,7 @@ help: |
   /buy <_sats amount_> <_fiat amount_> <_Fiat code_> <_payment method_> [premium/discount] - Creates a Purchase Order
   /takeorder <_order id_> - Allows the user to take an order from the chat with the bot without going to the channel where it was published
   /info - Shows additional info about the bot
+  /stats - Shows basic user info
   /showusername - Toggles off the username display in each new order created. Default value is set to false
   /showvolume - Shows trade volume when each order is created, default value is false
   /setinvoice - This command allows the buyer to update the lightning invoice where to receive the sats 
@@ -632,6 +633,14 @@ user_info: |
   Volume traded: ${volume_traded}
   Total rating: ${total_rating}
   Disputes: ${disputes}
+user_stats: |
+  *User info:*
+  >Volume traded: ${volume_traded}
+  >Total rating: ${total_rating}
+  >Disputes: ${disputes}
+
+  *Bot info:*
+  >Bot fee: ${bot_fee}
 disclaimer: |
   *By using the P2P trade bot, you agree to the following terms and conditions:*
 
