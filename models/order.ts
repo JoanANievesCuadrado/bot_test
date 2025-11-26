@@ -3,6 +3,8 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface IOrder extends Document {
   description?: string;
   amount: number;
+  // min_sats: number;  // TODO
+  // max_sats: number;  // TODO
   max_amount: number;
   min_amount: number;
   fee: number;
@@ -55,6 +57,16 @@ const orderSchema = new Schema<IOrder>({
     type: Number,
     min: 0,
   },
+  // max_sats: {  // TODO
+  //   // max amount in sats
+  //   type: Number,
+  //   min: 0,
+  // },
+  // min_sats: {  // TODO
+  //   // min amount in sats
+  //   type: Number,
+  //   min: 0
+  // },
   max_amount: {
     // max amount in fiat
     type: Number,

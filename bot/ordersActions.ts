@@ -21,7 +21,7 @@ const { ObjectId } = require('mongoose').Types;
 
 interface CreateOrderArguments {
   type: string;
-  amount: number;
+  amount: number;  // TODO: amount: number[]
   fiatAmount: number[];
   fiatCode: string;
   paymentMethod: string;
@@ -36,7 +36,7 @@ interface CreateOrderArguments {
 interface BuildDescriptionArguments {
   user: UserDocument;
   type: string;
-  amount: number;
+  amount: number; // TODO: amount: number[]
   fiatAmount: number[];
   fiatCode: string;
   paymentMethod: string;
@@ -50,6 +50,12 @@ interface FiatAmountData {
   fiat_amount?: number;
   min_amount?: number;
   max_amount?: number;
+}
+
+interface SatsAmountData {
+  amount?: number;
+  min_sats?: number;
+  max_sats?: number;
 }
 
 const createOrder = async (
@@ -71,7 +77,7 @@ const createOrder = async (
   }: CreateOrderArguments,
 ) => {
   try {
-    amount = Math.floor(amount);
+    amount = Math.floor(amount);  // TODO: amount = amount.map(Math.Floor)
     let isPublic = true;
     if (community_id) {
       const community = await Community.findById(community_id);
@@ -89,14 +95,15 @@ const createOrder = async (
     const communityFee = parseFloat(process.env.FEE_PERCENT);
     const currency = getCurrency(fiatCode);
     if (currency == null) throw new Error('currency is null');
-    const priceFromAPI = !amount;
+
+    const fiatAmountData = getFiatAmountData(fiatAmount);
+    // const satsAmountData = getSatsAmountData(amount); // TODO
+    const priceFromAPI = !amount;  // TODO: !fiatAmountData.fiat_amount || !satsAmountData.amount
 
     if (priceFromAPI && !currency.price) {
       await messages.notRateForCurrency(bot, user, i18n);
       return;
     }
-
-    const fiatAmountData = getFiatAmountData(fiatAmount);
 
     let randomImage = '';
     let isGoldenHoneyBadger = false;
@@ -110,12 +117,12 @@ const createOrder = async (
     }
 
     const recalculatedFee = isGoldenHoneyBadgerOrder
-      ? await getFee(amount, community_id || '', true)
+      ? await getFee(amount, community_id || '', true)  // TODO
       : fee;
 
     const baseOrderData = {
       ...fiatAmountData,
-      amount,
+      amount,  // TODO: ...satsAmountData
       fee: recalculatedFee,
       bot_fee: isGoldenHoneyBadgerOrder ? 0 : botFee,
       is_golden_honey_badger: isGoldenHoneyBadgerOrder,
@@ -187,6 +194,19 @@ const getFiatAmountData = (fiatAmount: number[]) => {
   return response;
 };
 
+const getSatsAmountData = (amount: number[]) => {
+  const response: SatsAmountData = {};
+  if (amount.length === 2) {
+    response.min_sats = amount[0];
+    response.max_sats = amount[1];
+    response.amount = 0;  // TODO
+  } else {
+    response.amount = amount[0];
+  }
+
+  return response;
+};
+
 const buildDescription = (
   i18n: I18nContext,
   {
@@ -221,7 +241,7 @@ const buildDescription = (
       !!priceMargin && priceMargin > 0 ? `+${priceMargin}` : priceMargin;
     const priceMarginText = priceMargin ? `${priceMargin}%` : ``;
 
-    const fiatAmountString = fiatAmount
+    const fiatAmountString = fiatAmount  // TODO: let
       .map(amt => numberFormat(fiatCode, amt))
       .join(' - ');
 
@@ -231,13 +251,18 @@ const buildDescription = (
       currencyString = `${fiatAmountString} ${currency.code} ${currency.emoji}`;
 
     let amountText = `${numberFormat(fiatCode, amount)} `;
+    // TODO
+    // let amountText = amount.map(amt => numberFormat(fiatCode, amt))
     let tasaText = '';
     if (priceFromAPI) {
       amountText = '';
+      // TODO
+      // amountText = amount.length === 1 ? '' : amountText;
+      // fiatAmountString = fiatAmount.length === 1 ? '' : fiatAmountString;
       tasaText =
         i18n.t('rate') + `: ${process.env.FIAT_RATE_NAME} ${priceMarginText}\n`;
     } else {
-      const exchangePrice = getBtcExchangePrice(fiatAmount[0], amount);
+      const exchangePrice = getBtcExchangePrice(fiatAmount[0], amount); // TODO: amount[0]
       if (exchangePrice == null) throw new Error('exchangePrice is null');
       tasaText =
         i18n.t('price') +
