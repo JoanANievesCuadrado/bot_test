@@ -864,6 +864,14 @@ const mustBeANumberOrRange = async (ctx: MainContext) => {
   }
 };
 
+const satsMustBeANumberOrRange = async (ctx: MainContext) => {
+  try {
+    await ctx.reply(ctx.i18n.t('sats_must_be_number_or_range'));
+  } catch (error) {
+    logger.error(error);
+  }
+};
+
 const invalidLightningAddress = async (ctx: MainContext) => {
   try {
     await ctx.reply(ctx.i18n.t('invalid_lightning_address'));
@@ -1522,6 +1530,14 @@ const invalidRangeWithAmount = async (ctx: MainContext) => {
   }
 };
 
+const invalidDoubleRange = async (ctx: MainContext) => {
+  try {
+    await ctx.reply(ctx.i18n.t('invalid_double_range'));
+  } catch (error) {
+    logger.error(error);
+  }
+};
+
 const tooManyPendingOrdersMessage = async (
   ctx: MainContext,
   user: UserDocument,
@@ -2022,6 +2038,7 @@ export {
   checkOrderMessage,
   mustBeValidCurrency,
   mustBeANumberOrRange,
+  satsMustBeANumberOrRange,
   invalidLightningAddress,
   helpMessage,
   termsMessage,
@@ -2074,6 +2091,7 @@ export {
   successCancelAllOrdersMessage,
   disableLightningAddress,
   invalidRangeWithAmount,
+  invalidDoubleRange,
   tooManyPendingOrdersMessage,
   wizardAddInvoiceInitMessage,
   wizardAddInvoiceExitMessage,

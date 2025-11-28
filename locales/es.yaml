@@ -235,6 +235,7 @@ counterpart_started: '🥴 Tu contraparte ha iniciado una disputa en tu orden co
 dispute_started: '${who} Un solver te atenderá pronto, cuando él/la solver sea asignado a tu disputa el bot te dirá su username, solo él/ella podrá atenderte. Puedes escribirle directamente, pero si él/ella te contacta primero, debes pedirle que te diga cuál es el token de tu disputa, tu token es: ${token}.'
 must_be_valid_currency: 'codigo_fiat debe ser un código de moneda válido, ejemplo: USD, EUR, puedes ver una lista completa ejecutando /listcurrencies'
 must_be_number_or_range: 'monto_en_fiat debe ser un número o un rango numerico de la forma: <mínimo>-<máximo>.'
+sats_must_be_number_or_range: 'monto_en_sats debe ser un número o un rango numérico de la forma: <mínimo>-<máximo>.'
 invalid_lightning_address: Dirección lightning no válida
 unavailable_lightning_address: Dirección lightning ${la} no disponible
 help: |
@@ -342,6 +343,10 @@ invalid_range_with_amount: |
   Los rangos solo estan habilitados para tasas flotantes.
 
   Utilice rangos o bien especifique la cantidad de sats, pero no ambas.
+invalid_double_range: |
+  Los rangos solo estan habilitados para tasas flotantes.
+
+  Utilice rangos para la cantidad de fiat o la cantidad de sats, pero no ambas.
 too_many_pending_orders: Has llegado al máximo de órdenes publicadas simultáneamente
 name: Nombre
 group: Grupo

@@ -50,7 +50,7 @@ const sell = async (ctx: MainContext) => {
     const sellOrderParams = await validateSellOrder(ctx);
 
     if (!sellOrderParams) return;
-    const { amount, fiatAmount, fiatCode, paymentMethod } = sellOrderParams;
+    const { amount, min_sats, max_sats, fiatAmount, fiatCode, paymentMethod } = sellOrderParams;
     let priceMargin = sellOrderParams.priceMargin;
     priceMargin = isFloat(priceMargin)
       ? parseFloat(priceMargin.toFixed(2))
@@ -96,6 +96,8 @@ const sell = async (ctx: MainContext) => {
     const order = await ordersActions.createOrder(ctx.i18n, ctx, user, {
       type: 'sell',
       amount,
+      min_sats,
+      max_sats,
       fiatAmount,
       fiatCode,
       paymentMethod,
@@ -119,7 +121,7 @@ const buy = async (ctx: MainContext) => {
     const buyOrderParams = await validateBuyOrder(ctx);
     if (!buyOrderParams) return;
 
-    const { amount, fiatAmount, fiatCode, paymentMethod } = buyOrderParams;
+    const { amount, min_sats, max_sats, fiatAmount, fiatCode, paymentMethod } = buyOrderParams;
     let priceMargin = buyOrderParams.priceMargin;
     priceMargin = isFloat(priceMargin)
       ? parseFloat(priceMargin.toFixed(2))
@@ -166,6 +168,8 @@ const buy = async (ctx: MainContext) => {
     const order = await ordersActions.createOrder(ctx.i18n, ctx, user, {
       type: 'buy',
       amount,
+      min_sats,
+      max_sats,
       fiatAmount,
       fiatCode,
       paymentMethod,

@@ -167,7 +167,10 @@ const validateSellOrder = async (ctx: MainContext) => {
     }
     args = processParameters(args);
 
-    let [amount, fiatAmount, fiatCode, paymentMethod, priceMargin] = args;
+    let [sats_amt, fiatAmount, fiatCode, paymentMethod, priceMargin] = args;
+    let min_sats = 0;
+    let max_sats = 0;
+    let amount = 0;
 
     if (priceMargin && isNaN(priceMargin)) {
       await ctx.reply(
@@ -178,14 +181,46 @@ const validateSellOrder = async (ctx: MainContext) => {
       return false;
     }
 
-    // amount = amount.split('-')
-    // amount = amount.map(Number)
-    amount = parseInt(amount);  // TODO
-    if (isNaN(amount)) {
+    sats_amt = sats_amt.split('-');
+    sats_amt = sats_amt.map(Number);
+
+    if (sats_amt.length > 2) {
+      await messages.satsMustBeANumberOrRange(ctx);
+      return false;
+    }
+
+    if (sats_amt.some(isNaN)) {
       await ctx.reply(
         ctx.i18n.t('must_be_int', { fieldName: ctx.i18n.t('sats_amount') }),
       );
+      return false;
+    }
 
+    if (sats_amt.length === 2 && sats_amt[1] <= sats_amt[0]) {
+      await messages.satsMustBeANumberOrRange(ctx);
+      return false;
+    }
+
+    if (sats_amt.length === 2) {
+      min_sats = parseInt(sats_amt[0]);
+      max_sats = parseInt(sats_amt[1]);
+    } else {
+      amount = parseInt(sats_amt[0]);
+    }
+
+    if (!amount && amount < Number(process.env.MIN_PAYMENT_AMT)) {
+      await messages.mustBeGreatherEqThan(
+        ctx,
+        'sats_amount',
+        Number(process.env.MIN_PAYMENT_AMT));
+      return false;
+    }
+
+    if (amount && min_sats < Number(process.env.MIN_PAYMENT_AMT)) {
+      await messages.mustBeGreatherEqThan(
+        ctx,
+        'sats_amount',
+        Number(process.env.MIN_PAYMENT_AMT));
       return false;
     }
 
@@ -193,10 +228,6 @@ const validateSellOrder = async (ctx: MainContext) => {
     fiatAmount = fiatAmount.split('-');
     fiatAmount = fiatAmount.map(Number);
 
-    if (fiatAmount.length === 2 && amount) {
-      await messages.invalidRangeWithAmount(ctx);
-      return false;
-    }
 
     // ranges like [100, 0, 2] (originate from ranges like 100--2)
     // will make this conditional fail
@@ -205,13 +236,23 @@ const validateSellOrder = async (ctx: MainContext) => {
       return false;
     }
 
-    // TODO, this validation could be amount > 0?
-    if (amount !== 0 && amount < Number(process.env.MIN_PAYMENT_AMT)) {
-      await messages.mustBeGreatherEqThan(
-        ctx,
-        'monto_en_sats',
-        Number(process.env.MIN_PAYMENT_AMT),
-      );
+    if (fiatAmount.length === 2 && amount) {
+      await messages.invalidRangeWithAmount(ctx);
+      return false;
+    }
+
+    if (fiatAmount.length === 2 && sats_amt.lenght === 2) {
+      await messages.invalidDoubleRange(ctx);  // TODO: add locales
+      return false;
+    }
+
+    if (fiatAmount[0] && sats_amt.lenght === 2) {
+      await messages.invalidRangeWithAmount(ctx);  // TODO: change the message
+      return false
+    }
+
+    if (fiatAmount.some(isNaN)) {
+      await messages.mustBeANumberOrRange(ctx);
       return false;
     }
 
@@ -220,13 +261,8 @@ const validateSellOrder = async (ctx: MainContext) => {
       return false;
     }
 
-    if (fiatAmount.some(isNaN)) {
-      await messages.mustBeANumberOrRange(ctx);
-      return false;
-    }
-
     if (fiatAmount.some((x: number) => x < 1)) {
-      await messages.mustBeGreatherEqThan(ctx, 'monto_en_fiat', 1);
+      await messages.mustBeGreatherEqThan(ctx, 'monto_en_fiat', 1);  // TODO: 'sats_amount'
       return false;
     }
 
@@ -239,6 +275,8 @@ const validateSellOrder = async (ctx: MainContext) => {
 
     return {
       amount,
+      min_sats,
+      max_sats,
       fiatAmount,
       fiatCode: fiatCode.toUpperCase(),
       paymentMethod,
@@ -259,7 +297,10 @@ const validateBuyOrder = async (ctx: MainContext) => {
     }
     args = processParameters(args);
 
-    let [amount, fiatAmount, fiatCode, paymentMethod, priceMargin] = args;
+    let [sats_amt, fiatAmount, fiatCode, paymentMethod, priceMargin] = args;
+    let min_sats = 0;
+    let max_sats = 0;
+    let amount = 0;
 
     if (priceMargin && isNaN(priceMargin)) {
       await ctx.reply(
@@ -270,22 +311,52 @@ const validateBuyOrder = async (ctx: MainContext) => {
       return false;
     }
 
-    amount = parseInt(amount);
-    if (isNaN(amount)) {
+    sats_amt = sats_amt.split('-');
+    sats_amt = sats_amt.map(Number);
+
+    if (sats_amt.length > 2) {
+      await messages.satsMustBeANumberOrRange(ctx);
+      return false;
+    }
+
+    if (sats_amt.some(isNaN)) {
       await ctx.reply(
-        ctx.i18n.t('must_be_int', { fieldName: ctx.i18n.t('sats_amount') }),
+        ctx.i18n.t('must_be_int', {fieldName: ctx.i18n.t('sats_amount')}),
       );
+      return false;
+    }
+
+    if (sats_amt.length === 2 && sats_amt[1] <= sats_amt[0]) {
+      await messages.satsMustBeANumberOrRange(ctx);
+      return false;
+    }
+
+    if (sats_amt.length === 2) {
+      min_sats = parseInt(sats_amt[0]);
+      max_sats = parseInt(sats_amt[1]);
+    } else {
+      amount = parseInt(sats_amt[0]);
+    }
+
+    if (!amount && amount < Number(process.env.MIN_PAYMENT_AMT)) {
+      await messages.mustBeGreatherEqThan(
+        ctx,
+        'sats_amount',
+        Number(process.env.MIN_PAYMENT_AMT));
+      return false;
+    }
+
+    if (amount && min_sats < Number(process.env.MIN_PAYMENT_AMT)) {
+      await messages.mustBeGreatherEqThan(
+        ctx,
+        'sats_amount',
+        Number(process.env.MIN_PAYMENT_AMT));
       return false;
     }
 
     // for ranges like 100--2, the result will be [100, 0, 2]
     fiatAmount = fiatAmount.split('-');
     fiatAmount = fiatAmount.map(Number);
-
-    if (fiatAmount.length === 2 && amount) {
-      await messages.invalidRangeWithAmount(ctx);
-      return false;
-    }
 
     // ranges like [100, 0, 2] (originate from ranges like 100--2)
     // will make this conditional fail
@@ -294,12 +365,23 @@ const validateBuyOrder = async (ctx: MainContext) => {
       return false;
     }
 
-    if (amount !== 0 && amount < Number(process.env.MIN_PAYMENT_AMT)) {
-      await messages.mustBeGreatherEqThan(
-        ctx,
-        'monto_en_sats',
-        Number(process.env.MIN_PAYMENT_AMT),
-      );
+    if (fiatAmount.length === 2 && amount) {
+      await messages.invalidRangeWithAmount(ctx);
+      return false;
+    }
+
+    if (fiatAmount.length === 2 && sats_amt.lenght === 2) {
+      await messages.invalidDoubleRange(ctx);  // TODO: add locales
+      return false;
+    }
+
+    if (fiatAmount[0] && sats_amt.lenght === 2) {
+      await messages.invalidRangeWithAmount(ctx);  // TODO: change the message
+      return false
+    }
+
+    if (fiatAmount.some(isNaN)) {
+      await messages.mustBeANumberOrRange(ctx);
       return false;
     }
 
@@ -308,13 +390,8 @@ const validateBuyOrder = async (ctx: MainContext) => {
       return false;
     }
 
-    if (fiatAmount.some(isNaN)) {
-      await messages.mustBeANumberOrRange(ctx);
-      return false;
-    }
-
     if (fiatAmount.some((x: number) => x < 1)) {
-      await messages.mustBeGreatherEqThan(ctx, 'monto_en_fiat', 1);
+      await messages.mustBeGreatherEqThan(ctx, 'monto_en_fiat', 1);  // TODO: 'sats_amount'
       return false;
     }
 
@@ -327,6 +404,8 @@ const validateBuyOrder = async (ctx: MainContext) => {
 
     return {
       amount,
+      min_sats,
+      max_sats,
       fiatAmount,
       fiatCode: fiatCode.toUpperCase(),
       paymentMethod,
