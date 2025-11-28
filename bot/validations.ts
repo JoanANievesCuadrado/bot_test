@@ -178,7 +178,9 @@ const validateSellOrder = async (ctx: MainContext) => {
       return false;
     }
 
-    amount = parseInt(amount);
+    // amount = amount.split('-')
+    // amount = amount.map(Number)
+    amount = parseInt(amount);  // TODO
     if (isNaN(amount)) {
       await ctx.reply(
         ctx.i18n.t('must_be_int', { fieldName: ctx.i18n.t('sats_amount') }),

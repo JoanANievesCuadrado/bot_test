@@ -21,7 +21,9 @@ const { ObjectId } = require('mongoose').Types;
 
 interface CreateOrderArguments {
   type: string;
-  amount: number;  // TODO: amount: number[]
+  amount: number;
+  min_sats: number;  // TODO
+  max_sats: number;  // TODO
   fiatAmount: number[];
   fiatCode: string;
   paymentMethod: string;
@@ -36,7 +38,9 @@ interface CreateOrderArguments {
 interface BuildDescriptionArguments {
   user: UserDocument;
   type: string;
-  amount: number; // TODO: amount: number[]
+  amount: number;
+  min_sats: number;
+  max_sats: number;
   fiatAmount: number[];
   fiatCode: string;
   paymentMethod: string;
@@ -52,12 +56,6 @@ interface FiatAmountData {
   max_amount?: number;
 }
 
-interface SatsAmountData {
-  amount?: number;
-  min_sats?: number;
-  max_sats?: number;
-}
-
 const createOrder = async (
   i18n: I18nContext,
   bot: HasTelegram,
@@ -65,6 +63,8 @@ const createOrder = async (
   {
     type,
     amount,
+    min_sats,
+    max_sats,
     fiatAmount,
     fiatCode,
     paymentMethod,
@@ -77,7 +77,9 @@ const createOrder = async (
   }: CreateOrderArguments,
 ) => {
   try {
-    amount = Math.floor(amount);  // TODO: amount = amount.map(Math.Floor)
+    amount = Math.floor(amount);
+    min_sats = Math.floor(min_sats);
+    max_sats = Math.floor(max_sats);
     let isPublic = true;
     if (community_id) {
       const community = await Community.findById(community_id);
@@ -97,7 +99,6 @@ const createOrder = async (
     if (currency == null) throw new Error('currency is null');
 
     const fiatAmountData = getFiatAmountData(fiatAmount);
-    // const satsAmountData = getSatsAmountData(amount); // TODO
     const priceFromAPI = !amount;  // TODO: !fiatAmountData.fiat_amount || !satsAmountData.amount
 
     if (priceFromAPI && !currency.price) {
@@ -117,12 +118,14 @@ const createOrder = async (
     }
 
     const recalculatedFee = isGoldenHoneyBadgerOrder
-      ? await getFee(amount, community_id || '', true)  // TODO
+      ? await getFee(amount, community_id || '', true)
       : fee;
 
     const baseOrderData = {
       ...fiatAmountData,
-      amount,  // TODO: ...satsAmountData
+      amount,
+      min_sats,
+      max_sats,
       fee: recalculatedFee,
       bot_fee: isGoldenHoneyBadgerOrder ? 0 : botFee,
       is_golden_honey_badger: isGoldenHoneyBadgerOrder,
@@ -140,6 +143,8 @@ const createOrder = async (
         user,
         type,
         amount,
+        min_sats,
+        max_sats,
         fiatAmount,
         fiatCode,
         paymentMethod,
@@ -194,25 +199,14 @@ const getFiatAmountData = (fiatAmount: number[]) => {
   return response;
 };
 
-const getSatsAmountData = (amount: number[]) => {
-  const response: SatsAmountData = {};
-  if (amount.length === 2) {
-    response.min_sats = amount[0];
-    response.max_sats = amount[1];
-    response.amount = 0;  // TODO
-  } else {
-    response.amount = amount[0];
-  }
-
-  return response;
-};
-
 const buildDescription = (
   i18n: I18nContext,
   {
     user,
     type,
     amount,
+    min_sats,
+    max_sats,
     fiatAmount,
     fiatCode,
     paymentMethod,
@@ -241,7 +235,7 @@ const buildDescription = (
       !!priceMargin && priceMargin > 0 ? `+${priceMargin}` : priceMargin;
     const priceMarginText = priceMargin ? `${priceMargin}%` : ``;
 
-    const fiatAmountString = fiatAmount  // TODO: let
+    let fiatAmountString = fiatAmount
       .map(amt => numberFormat(fiatCode, amt))
       .join(' - ');
 
@@ -251,18 +245,14 @@ const buildDescription = (
       currencyString = `${fiatAmountString} ${currency.code} ${currency.emoji}`;
 
     let amountText = `${numberFormat(fiatCode, amount)} `;
-    // TODO
-    // let amountText = amount.map(amt => numberFormat(fiatCode, amt))
     let tasaText = '';
     if (priceFromAPI) {
-      amountText = '';
-      // TODO
-      // amountText = amount.length === 1 ? '' : amountText;
-      // fiatAmountString = fiatAmount.length === 1 ? '' : fiatAmountString;
+      amountText = fiatAmount.length === 1 ? `${min_sats} - ${max_sats}` : '';
+      fiatAmountString = fiatAmount.length === 1 ? '' : fiatAmountString;
       tasaText =
         i18n.t('rate') + `: ${process.env.FIAT_RATE_NAME} ${priceMarginText}\n`;
     } else {
-      const exchangePrice = getBtcExchangePrice(fiatAmount[0], amount); // TODO: amount[0]
+      const exchangePrice = getBtcExchangePrice(fiatAmount[0], amount);
       if (exchangePrice == null) throw new Error('exchangePrice is null');
       tasaText =
         i18n.t('price') +
@@ -353,6 +343,7 @@ const getOrders = async (user: UserDocument, status?: string) => {
   }
 };
 
+// TODO
 const getNewRangeOrderPayload = async (order: IOrder) => {
   try {
     let newMaxAmount = 0;
@@ -365,6 +356,8 @@ const getNewRangeOrderPayload = async (order: IOrder) => {
       const orderData = {
         type: order.type,
         amount: 0,
+        min_sats: order.min_sats,
+        max_sats: order.max_sats,
         // drop newMaxAmount if it is equal to min_amount and create a
         // not range order.
         // Set preserves insertion order, so min_amount will be always
@@ -387,4 +380,40 @@ const getNewRangeOrderPayload = async (order: IOrder) => {
   }
 };
 
-export { createOrder, getOrder, getOrders, getNewRangeOrderPayload };
+const getNewSatsRangeOrderPayload = async (order: IOrder) => {
+  try {
+    let newMaxSatsAmount = 0;
+
+    if (order.max_sats !== undefined && order.amount !== undefined) {
+      newMaxSatsAmount = order.max_sats - order.amount;
+    }
+
+    if (newMaxSatsAmount >= order.min_sats) {
+      const orderData = {
+        type: order.type,
+        amount: 0,
+        min_sats: order.min_sats,
+        max_sats: newMaxSatsAmount,
+        // drop newMaxAmount if it is equal to min_amount and create a
+        // not range order.
+        // Set preserves insertion order, so min_amount will be always
+        // before newMaxAmount
+        fiatAmount: [],
+        fiatCode: order.fiat_code,
+        paymentMethod: order.payment_method,
+        status: 'PENDING',
+        priceMargin: order.price_margin,
+        range_parent_id: order._id,
+        tgChatId: order.tg_chat_id,
+        tgOrderMessage: order.tg_order_message,
+        community_id: order.community_id,
+      };
+
+      return orderData;
+    }
+  } catch (error) {
+    logger.error(error);
+  }
+};
+
+export { createOrder, getOrder, getOrders, getNewRangeOrderPayload, getNewSatsRangeOrderPayload };
